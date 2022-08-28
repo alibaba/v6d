@@ -105,6 +105,7 @@ def start_fuse():
             '-f',
             '-s',
             '--vineyard-socket=%s' % VINEYARD_CI_IPC_SOCKET,
+            '--max-cache-size=%d' % 5000,
             VINEYARD_FUSE_MOUNT_DIR,
         )
         yield stack.enter_context(proc)
@@ -464,7 +465,7 @@ def run_fuse_test(etcd_endpoints):
 
     with start_vineyardd(
         etcd_endpoints, etcd_prefix, default_ipc_socket=VINEYARD_CI_IPC_SOCKET
-    ) as (_, rpc_socket_port), start_fuse() as _:
+    ) as (_, rpc_socket_port), start_fuse() as proc:
         start_time = time.time()
         subprocess.check_call(
             [
@@ -478,6 +479,7 @@ def run_fuse_test(etcd_endpoints):
                 '--vineyard-ipc-socket=%s' % VINEYARD_CI_IPC_SOCKET,
                 '--vineyard-endpoint=localhost:%s' % rpc_socket_port,
                 '--vineyard-fuse-mount-dir=%s' % VINEYARD_FUSE_MOUNT_DIR,
+                '--vineyard-fuse-process-pid=%d' % proc.pid,
             ],
             cwd=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'),
         )
